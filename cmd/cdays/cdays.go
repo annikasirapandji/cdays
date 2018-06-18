@@ -1,23 +1,38 @@
-package main
+package cdays
 
 import (
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/cdays/internal/routing"
-	"github.com/cdays/internal/version"
+	"github.com/annikasirapandji/cdays/internal/routing"
+	"github.com/annikasirapandji/cdays/internal/version"
 )
 
 func main() {
-	log.Print("The application is starting, version is %s, build time is %s, commit is %v ...", version.Release, version.BuildTime, version.Commit)
+	log.Printf(
+		"The application is starting, version is %s, build time is %s, commit is %v...",
+		version.Release, version.BuildTime, version.Commit,
+	)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("The port wasn't set")
 	}
 
-	r := routing.NewBLRouter()
+	diagPort := os.Getenv("DIAG_PORT")
+	if diagPort == "" {
+		log.Fatal("The port wasn't set")
+	}
 
-	log.Fatal(http.ListenAndServe(":8000", r))
+	go func() {
+		r := routing.NewBLRouter()
+		log.Fatal(http.ListenAndServe(":8000", r))
+	}()
+
+	{
+		r := routing.NewDiagnosticsRouter()
+		log.Fatal(http.ListenAndServe(":8000", r))
+	}
+
 }

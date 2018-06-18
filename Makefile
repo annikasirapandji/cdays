@@ -1,6 +1,10 @@
 PROJECT?=github.com/annikasirapandji/cdays
 BUILD_PATH?=cmd/cdays
 
+RELEASE?=0.0.1
+COMMIT?=$(shell git rev-parse --short HEAD)
+BUILD_TIME?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
+
 build: test
 	go build \
 		-ldflags "-s -w -X ${PROJECT}/internal/version.Release=${RELEASE} \
