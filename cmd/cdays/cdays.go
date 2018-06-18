@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/annikasirapandji/cdays/internal/routing"
-	"github.com/annikasirapandji/cdays/internal/version"
+	"github.com/cdays/internal/routing"
+	"github.com/cdays/internal/version"
 )
 
 func main() {
