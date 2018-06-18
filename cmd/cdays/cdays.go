@@ -1,9 +1,13 @@
-package cdays
+package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/annikasirapandji/cdays/internal/routing"
 	"github.com/annikasirapandji/cdays/internal/version"
@@ -22,17 +26,51 @@ func main() {
 
 	diagPort := os.Getenv("DIAG_PORT")
 	if diagPort == "" {
-		log.Fatal("The port wasn't set")
+		log.Fatal("The diagnostics port wasn't set")
 	}
 
+	var blServer, diagServer http.Server
+
+	srvErrs := make(chan error, 2)
 	go func() {
 		r := routing.NewBLRouter()
-		log.Fatal(http.ListenAndServe(":8000", r))
+		blServer = http.Server{
+			Addr:    ":" + port,
+			Handler: r,
+		}
+		err := blServer.ListenAndServe()
+		srvErrs <- err
 	}()
 
-	{
+	go func() {
 		r := routing.NewDiagnosticsRouter()
-		log.Fatal(http.ListenAndServe(":8000", r))
+		diagServer = http.Server{
+			Addr:    ":" + diagPort,
+			Handler: r,
+		}
+		err := diagServer.ListenAndServe()
+		srvErrs <- err
+	}()
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case killSignal := <-interrupt:
+		log.Printf("Got %s. Stopping...", killSignal)
+	case err := <-srvErrs:
+		log.Printf("Got a server error: %s", err)
 	}
 
+	{
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunc()
+		blServer.Shutdown(ctx)
+	}
+
+	{
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunc()
+		diagServer.Shutdown(ctx)
+	}
 }

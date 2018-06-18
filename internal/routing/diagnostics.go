@@ -1,6 +1,7 @@
 package routing
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -8,12 +9,13 @@ import (
 
 func NewDiagnosticsRouter() http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/alive", diagnosticHandler())
+	r.HandleFunc("/healthz", handleOK())
+	r.HandleFunc("/readyz", handleOK())
 	return r
 }
 
-func diagnosticHandler() func(http.ResponseWriter, *http.Request) {
+func handleOK() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("alive!"))
+		fmt.Fprint(w, http.StatusText(http.StatusOK))
 	}
 }
