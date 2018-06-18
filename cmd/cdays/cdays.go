@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cdays/internal/routing"
+	"github.com/annikasirapandji/cdays/internal/routing"
+	"github.com/annikasirapandji/cdays/internal/version"
 )
 
 func main() {
-	log.Print("The application is starting...")
+	log.Print("The application is starting, version is %s, build time is %s, commit is %v ...", version.Release, version.BuildTime, version.Commit)
 
 	port := os.Getenv("PORT")
 	if port == "" {
